@@ -1,14 +1,35 @@
 ﻿using UnityEngine;
 using System.Collections;
 using Facebook.Unity;
-using System.Collections.Generic; 
+using System.Collections.Generic;
+using UnityEngine.UI;
 
 public class index : MonoBehaviour
 {
+    public Text txtLog;
+    public Button btnLogout;
+
+    void Awake()
+    {
+        if (!FB.IsInitialized)
+        {
+            FB.Init();
+        }
+    }
+
     // Use this for initialization
     void Start()
     {
-        UnityEngine.Screen.SetResolution(480, 800, true);
+        UnityEngine.Screen.SetResolution(480, 800, true);  
+
+        if (FB.IsLoggedIn)
+        {
+            FB.API("me", HttpMethod.GET, (IGraphResult rslt) =>
+            {
+                txtLog.text = rslt.ResultDictionary["name"] + "님 안녕하세요";
+            });
+            btnLogout.gameObject.SetActive(false);
+        }
     }
 
     // Update is called once per frame
@@ -19,40 +40,34 @@ public class index : MonoBehaviour
 
     public void click()
     {
-        if (!FB.IsInitialized)
-        {
-            FB.Init();
-        }
-        
-            FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, this.loginHandler);
+        FB.LogInWithReadPermissions(new List<string>() { "public_profile", "email", "user_friends" }, this.loginHandler);
     }
 
-    public void loginHandler(ILoginResult rslt)
+    public void loginHandler(IResult rslt)
     {
-        GUI.Box(new Rect(0, 0, 100, 100), "This is the text to be displayed");
-
-        if (rslt.Error == null && ! rslt.Cancelled  && rslt.AccessToken != null)
+        if (FB.IsLoggedIn)
         {
-            
+            FB.API("me", HttpMethod.GET, (IGraphResult r) =>
+            {
+                txtLog.text = r.ResultDictionary["name"] + "님 안녕하세요";
+            });
+            btnLogout.gameObject.SetActive(true);
         }
+        else
+        {
+            txtLog.text = "";
+        }
+
+    }
+
+    public void btnLogout_Click()
+    {
+        FB.LogOut();
+        btnLogout.gameObject.SetActive(false);
     }
 
     void OnGUI()
     {
-        // Make a background box
-        GUI.Box(new Rect(10, 10, 100, 90), "Loader Menu");
-
-        // Make the first button. If it is pressed, Application.Loadlevel (1) will be executed
-        if (GUI.Button(new Rect(20, 40, 80, 20), "Level 1"))
-        {
-            Application.LoadLevel(1);
-        }
-
-        // Make the second button.
-        if (GUI.Button(new Rect(20, 70, 80, 20), "Level 2"))
-        {
-            Application.LoadLevel(2);
-        }
     }
-
+     
 }
