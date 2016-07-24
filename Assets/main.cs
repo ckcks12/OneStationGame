@@ -6,35 +6,51 @@ using System.Net;
 using System.IO;
 using System.Text;
 using System.Reflection;
+using Facebook.Unity;
+using UnityEngine.SceneManagement;
 
 public class main : MonoBehaviour
 {
 
     public Button btnTest;
+    public Text txtGameRanking;
+    private string user_id;
 
     // Use this for initialization
     void Start()
     {
-
+        FB.API("me", HttpMethod.GET, (IGraphResult rslt) =>
+        {
+            user_id = rslt.ResultDictionary["id"].ToString();
+        });
     }
 
     // Update is called once per frame
     void Update()
     {
-
+        if (Input.GetKey(KeyCode.Escape))
+        {
+            SceneManager.LoadScene("index");
+            SceneManager.UnloadScene("main");
+            return;
+        }
     }
 
     public void btnTest_Click(Text txt)
     {
-        Score score = new Score();
-        string id = Random.Range(1, 10).ToString();
-        score.id = id;
-        score.score = (uint)Random.Range(1, 100);
-        score.game_id = 1;
-        Restful.post("http://ckcks12.com:5000/score", score);
+        /*
+        FB.API("me/taggable_friends", HttpMethod.GET, (IGraphResult rslt) =>
+        {
+            Debug.Log(rslt.ResultDictionary["data"].ToString());
+            var list = JsonUtility.FromJson<User[]>(rslt.ResultDictionary["data"].ToString());
+            txt.text = list.Length.ToString();
+        });
 
-        score = Restful.get<Score>("http://ckcks12.com:5000/score", id);
-        txt.text = score.id + " = " + score.score;
+        return;
+        */
+
+        var score = Restful.get<Score>("http://ckcks12.com:5000/score", user_id);
+        txt.text = "당신의 점수 : " + score.score.ToString();
     }
 }
 
@@ -44,6 +60,19 @@ public class Score
     public string id;
     public uint score;
     public uint game_id;
+}
+
+public class Article
+{
+    public uint pk;
+    public string title;
+    public string content;
+    public string written_time;
+}
+
+public class User
+{
+    public string id;
 }
 
 public static class Restful
